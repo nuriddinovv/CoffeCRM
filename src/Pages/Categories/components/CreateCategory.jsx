@@ -30,26 +30,37 @@ const AddCategoryModal = ({ open, onClose }) => {
   const mutation = useMutation({
    mutationFn:async (data) => {
       try {
-         const response = await request({method:"post", url:"/category", data})
+         const response = await request.post("/category/", data);
          methods.reset({
            name: "",
            description: "",
            active: false,
          });
-         toast.success("Category added successfully")
-         onClose()
-         return response.data
-
+         toast.success("Category added successfully");
+         onClose();
+         return response.data;
       } catch (error) {
-         //
-         console.log(error);
-
+         // Handle error and show user-friendly message
+         const errorMessage = 
+           error.response?.data?.message || 
+           error.response?.data?.detail || 
+           error.response?.data?.error ||
+           error.message || 
+           "Failed to create category";
+         
+         toast.error(errorMessage);
+         console.error("Category creation error:", error);
+         throw error; // Re-throw to let react-query handle it
       }
    }
   })
 
   const handleSubmitCategory = (data) => {
-   mutation.mutate({name:data.name})
+   mutation.mutate({
+     name: data.name,
+     description: data.description || "",
+     active: data.active || false
+   });
   };
 
   return (
@@ -70,7 +81,7 @@ const AddCategoryModal = ({ open, onClose }) => {
 
               <Controller
                 name="description"
-               //  control={methods.control}
+                control={methods.control}
                 render={({ field }) => (
                   <Textarea {...field} placeholder="Type your message here." />
                 )}
